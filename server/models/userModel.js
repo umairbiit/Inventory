@@ -12,6 +12,12 @@ const userSchema = mongoose.Schema(
       unique: true,
       required: [true, "Please add an email !"],
     },
+    type: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      required: [true, "Please specify user type !"],
+    },
     phoneno: {
       type: String,
       unique: true,

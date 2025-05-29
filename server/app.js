@@ -26,9 +26,9 @@ app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 
-//routes
-// const authRoutes = require("./routes/authRoutes");
-// app.use("/api/auth", authRoutes);
+// routes
+const authRoutes = require("./routes/authRoutes");
+app.use("/api/auth", authRoutes);
 
 //port
 const port = process.env.PORT || 8008;

@@ -25,6 +25,30 @@ const loginStatus = asyncHandler(async (req, res) => {
   return res.json(false);
 });
 
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const user = await User.findById(verified.id);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const isMatch = await bcrypt.compare(oldPassword, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Old password is incorrect" });
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res.status(200).json({ message: "Password changed successfully" });
+});
+
 const logOut = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
@@ -37,6 +61,7 @@ const logOut = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  changePassword,
   loginStatus,
   logOut,
 };

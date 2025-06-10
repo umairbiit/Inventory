@@ -4,9 +4,11 @@ const {
   logOut,
   loginStatus,
   changePassword,
+  login,
 } = require("../controllers/userController");
 const router = express.Router();
 
+router.post("/login", login);
 router.get("/change-password", protect, changePassword);
 router.get("/loggedin-status", loginStatus);
 router.get("/logout", protect, logOut);

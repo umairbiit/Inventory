@@ -79,6 +79,26 @@ const loginStatus = asyncHandler(async (req, res) => {
   return res.json(false);
 });
 
+// Get User Details Controller
+const getUserDetails = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const verified = jwt.verify(token, process.env.JWT_SECRET);
+  if (!verified) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+
+  const user = await User.findById(verified.id).select("-password");
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  return res.status(200).json(user);
+});
+
 // Change Password Controller
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -120,5 +140,6 @@ module.exports = {
   login,
   changePassword,
   loginStatus,
+  getUserDetails,
   logOut,
 };

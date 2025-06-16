@@ -9,6 +9,42 @@ const generateToken = (id) => {
   });
 };
 
+// Register Admin Controller (use with caution)
+const registerAdmin = asyncHandler(async (req, res) => {
+  const { name, email, password, phoneno } = req.body;
+
+  const adminExists = await User.findOne({ email });
+  if (adminExists) {
+    return res.status(400).json({ message: "Email already in use" });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const admin = await User.create({
+    name,
+    email,
+    password: hashedPassword,
+    phoneno,
+    type: "admin",
+  });
+
+  if (admin) {
+    res.status(201).json({
+      message: "Admin registered successfully",
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        type: admin.type,
+        phoneno: admin.phoneno,
+      },
+    });
+  } else {
+    res.status(400).json({ message: "Invalid admin data" });
+  }
+});
+
 // Login Controller
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -137,6 +173,7 @@ const logOut = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  registerAdmin,
   login,
   changePassword,
   loginStatus,

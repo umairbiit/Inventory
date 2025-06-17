@@ -12,6 +12,12 @@ const userSchema = mongoose.Schema(
       unique: true,
       required: [true, "Please add an email !"],
     },
+    status: {
+      type: String,
+      enum: ["verified", "unverified"],
+      default: "unverified",
+      required: [true, "Please specify user status !"],
+    },
     type: {
       type: String,
       enum: ["user", "admin"],

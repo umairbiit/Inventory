@@ -45,6 +45,35 @@ const registerAdmin = asyncHandler(async (req, res) => {
   }
 });
 
+// Register Controller
+const registerUser = asyncHandler(async (req, res) => {
+  const { name, email, password, phoneno } = req.body;
+
+  const userExists = await User.findOne({ email });
+  if (userExists)
+    return res.status(400).json({ message: "Email already in use" });
+
+  const phoneExists = await User.findOne({ phoneno });
+  if (phoneExists)
+    return res.status(400).json({ message: "Phone number already in use" });
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    phoneno,
+    status: "unverified",
+    type: "user",
+  });
+
+  // const emailToken = jwt.sign({ id: user._id }, EMAIL_SECRET, { expiresIn: "1d" });
+  // await sendVerificationEmail(user, emailToken);
+
+  res.status(201).json({
+    message: "User registered. Please check your email to verify your account.",
+  });
+});
+
 // Login Controller
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -174,6 +203,7 @@ const logOut = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerAdmin,
+  registerUser,
   login,
   changePassword,
   loginStatus,

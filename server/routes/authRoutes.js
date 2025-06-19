@@ -18,3 +18,5 @@ router.get("/change-password", protect, changePassword);
 router.get("/loggedin-status", loginStatus);
 router.get("/logout", protect, logOut);
 router.get("/user-details", protect, getUserDetails);
+
+module.exports = router;

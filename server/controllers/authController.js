@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const sendVerificationEmail = require("../services/emailServices");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -66,8 +67,7 @@ const registerUser = asyncHandler(async (req, res) => {
     type: "user",
   });
 
-  // const emailToken = jwt.sign({ id: user._id }, EMAIL_SECRET, { expiresIn: "1d" });
-  // await sendVerificationEmail(user, emailToken);
+  await sendVerificationEmail(user);
 
   res.status(201).json({
     message: "User registered. Please check your email to verify your account.",

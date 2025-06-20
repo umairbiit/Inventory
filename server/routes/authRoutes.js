@@ -8,11 +8,13 @@ const {
   getUserDetails,
   registerAdmin,
   registerUser,
+  verifyEmail,
 } = require("../controllers/authController");
 const router = express.Router();
 
 router.post("/auth/register/admin", registerAdmin);
 router.post("/register", registerUser);
+router.get("/verify-email", verifyEmail);
 router.post("/login", login);
 router.get("/change-password", protect, changePassword);
 router.get("/loggedin-status", loginStatus);

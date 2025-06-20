@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const sendVerificationEmail = require("../services/emailServices");
+const { sendVerifySuccessEmail } = require("../services/emailServices");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -72,6 +72,32 @@ const registerUser = asyncHandler(async (req, res) => {
   res.status(201).json({
     message: "User registered. Please check your email to verify your account.",
   });
+});
+
+//verify email controller
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { token } = req.query;
+
+  if (!token)
+    return res.status(400).json({ message: "Verification token is missing." });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (user.status === "verified")
+      return res.status(400).json({ message: "User already verified." });
+
+    user.status = "verified";
+    await user.save();
+
+    await sendVerifySuccessEmail(user);
+
+    res.status(200).json({ message: "Email verified successfully." });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token." });
+  }
 });
 
 // Login Controller
@@ -204,6 +230,7 @@ const logOut = asyncHandler(async (req, res) => {
 module.exports = {
   registerAdmin,
   registerUser,
+  verifyEmail,
   login,
   changePassword,
   loginStatus,

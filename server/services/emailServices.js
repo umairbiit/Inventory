@@ -9,7 +9,7 @@ const sendVerificationEmail = async (user) => {
 
   const link = `${process.env.FRONTEND_URL}/verify-email/${token}`;
 
-  const html = loadHtmlTemplate("verification", {
+  const html = loadHtmlTemplate("verificationEmail", {
     name: user.name,
     link: link,
   });
@@ -21,4 +21,19 @@ const sendVerificationEmail = async (user) => {
   });
 };
 
-module.exports = sendVerificationEmail;
+const sendVerifySuccessEmail = async (user) => {
+  const html = loadHtmlTemplate("verifySuccessEmail", {
+    name: user.name,
+  });
+
+  await sendEmail({
+    to: user.email,
+    subject: "Email Verified Successfully - MERN Auth Boilerplate",
+    html,
+  });
+};
+
+module.exports = {
+  sendVerificationEmail,
+  sendVerifySuccessEmail,
+};

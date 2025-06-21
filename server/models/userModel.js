@@ -5,33 +5,41 @@ const userSchema = mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Please add a name !"],
+      required: [true, "Please add a name!"],
     },
     email: {
       type: String,
       unique: true,
-      required: [true, "Please add an email !"],
+      required: [true, "Please add an email!"],
     },
     status: {
       type: String,
       enum: ["verified", "unverified"],
       default: "unverified",
-      required: [true, "Please specify user status !"],
+      required: [true, "Please specify user status!"],
     },
     type: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
-      required: [true, "Please specify user type !"],
+      required: [true, "Please specify user type!"],
     },
     phoneno: {
       type: String,
       unique: true,
-      required: [true, "Please add a phone no. !"],
+      required: [true, "Please add a phone number!"],
     },
     password: {
       type: String,
-      required: [true, "Password is required !"],
+      required: [true, "Password is required!"],
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
   },
   {
@@ -39,15 +47,14 @@ const userSchema = mongoose.Schema(
   }
 );
 
-//Encrypt Password
+// Encrypt Password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
-  //Hashing
+
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(this.password, salt);
-  this.password = hashedPassword;
+  this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 

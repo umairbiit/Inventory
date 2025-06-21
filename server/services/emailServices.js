@@ -33,7 +33,27 @@ const sendVerifySuccessEmail = async (user) => {
   });
 };
 
+const sendPasswordResetEmail = async (user) => {
+  const token = jwt.sign({ id: user._id }, process.env.EMAIL_SECRET, {
+    expiresIn: "15m",
+  });
+
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+  const html = loadHtmlTemplate("passwordResetEmail", {
+    name: user.name,
+    link: resetLink,
+  });
+
+  await sendEmail({
+    to: user.email,
+    subject: "Reset Your Password - MERN Auth Boilerplate",
+    html,
+  });
+};
+
 module.exports = {
   sendVerificationEmail,
   sendVerifySuccessEmail,
+  sendPasswordResetEmail,
 };

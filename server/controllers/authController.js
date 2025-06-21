@@ -2,7 +2,10 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { sendVerifySuccessEmail } = require("../services/emailServices");
+const {
+  sendVerifySuccessEmail,
+  sendPasswordResetEmail,
+} = require("../services/emailServices");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -190,6 +193,28 @@ const getUserDetails = asyncHandler(async (req, res) => {
   return res.status(200).json(user);
 });
 
+//forgot password controllers
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found." });
+
+  // Generate token
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+
+  // Optionally save hashed token + expiry to DB (optional)
+  user.resetPasswordToken = token;
+  user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+  await user.save();
+
+  await sendPasswordResetEmail(user);
+
+  res.json({ message: "Password reset link sent to your email." });
+});
+
 // Change Password Controller
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -233,6 +258,7 @@ module.exports = {
   verifyEmail,
   login,
   changePassword,
+  forgotPassword,
   loginStatus,
   getUserDetails,
   logOut,

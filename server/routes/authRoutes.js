@@ -9,6 +9,7 @@ const {
   registerAdmin,
   registerUser,
   verifyEmail,
+  forgotPassword,
 } = require("../controllers/authController");
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.post("/register", registerUser);
 router.get("/verify-email", verifyEmail);
 router.post("/login", login);
 router.get("/change-password", protect, changePassword);
+router.post("/forgot-password", forgotPassword);
 router.get("/loggedin-status", loginStatus);
 router.get("/logout", protect, logOut);
 router.get("/user-details", protect, getUserDetails);

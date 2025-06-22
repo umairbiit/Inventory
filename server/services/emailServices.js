@@ -52,8 +52,21 @@ const sendPasswordResetEmail = async (user) => {
   });
 };
 
+const sendResetSuccessEmail = async (user) => {
+  const html = loadHtmlTemplate("resetSuccessEmail", {
+    name: user.name,
+  });
+
+  await sendEmail({
+    to: user.email,
+    subject: "Password Reset Successful - MERN Auth Boilerplate",
+    html,
+  });
+};
+
 module.exports = {
   sendVerificationEmail,
   sendVerifySuccessEmail,
   sendPasswordResetEmail,
+  sendResetSuccessEmail,
 };

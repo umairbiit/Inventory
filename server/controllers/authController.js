@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const {
   sendVerifySuccessEmail,
   sendPasswordResetEmail,
+  sendResetSuccessEmail,
 } = require("../services/emailServices");
 
 const generateToken = (id) => {
@@ -215,6 +216,35 @@ const forgotPassword = asyncHandler(async (req, res) => {
   res.json({ message: "Password reset link sent to your email." });
 });
 
+//reset password controller
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (
+      !user ||
+      user.resetPasswordToken !== token ||
+      user.resetPasswordExpires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    await sendResetSuccessEmail(user);
+
+    res.json({ message: "Password reset successful." });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token." });
+  }
+});
+
 // Change Password Controller
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -259,6 +289,7 @@ module.exports = {
   login,
   changePassword,
   forgotPassword,
+  resetPassword,
   loginStatus,
   getUserDetails,
   logOut,

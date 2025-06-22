@@ -216,6 +216,32 @@ const forgotPassword = asyncHandler(async (req, res) => {
   res.json({ message: "Password reset link sent to your email." });
 });
 
+//verify reset password token
+const verifyResetToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (
+      !user ||
+      user.resetPasswordToken !== token ||
+      user.resetPasswordExpires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    res.json({ message: "Token is valid." });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token." });
+  }
+});
+
 //reset password controller
 const resetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword } = req.body;
@@ -289,6 +315,7 @@ module.exports = {
   login,
   changePassword,
   forgotPassword,
+  verifyResetToken,
   resetPassword,
   loginStatus,
   getUserDetails,

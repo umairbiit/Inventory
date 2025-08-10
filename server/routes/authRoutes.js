@@ -1,5 +1,5 @@
 const express = require("express");
-const protect = require("../middlewares/authmiddleware");
+const protect = require("../middlewares/authMiddleware");
 const {
   logOut,
   loginStatus,

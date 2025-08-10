@@ -27,7 +27,7 @@ const VerifyEmail = () => {
         setStatus("error");
       }
     } catch (err) {
-      message.error(err.response?.data?.message || "Invalid or expired token!");
+      message.error(err.response?.data?.message || "Invalid or used token!");
       setStatus("error");
     } finally {
       setLoading(false);
@@ -63,7 +63,7 @@ const VerifyEmail = () => {
         <Result
           status="error"
           title="Verification Failed"
-          subTitle="Your verification link may have expired or is invalid."
+          subTitle="Your verification link may have been used or is invalid."
           extra={[
             <Button type="primary" key="home" onClick={() => navigate("/")}>
               Back to Home

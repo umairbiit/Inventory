@@ -6,6 +6,7 @@ const {
   sendVerifySuccessEmail,
   sendPasswordResetEmail,
   sendResetSuccessEmail,
+  sendVerificationEmail,
 } = require("../services/emailServices");
 
 const generateToken = (id) => {
@@ -155,7 +156,7 @@ const login = asyncHandler(async (req, res) => {
 const loginStatus = asyncHandler(async (req, res) => {
   const token = req.cookies.token;
   if (!token) {
-    res.json(false);
+    return res.json(false);
   }
   const verified = jwt.verify(token, process.env.JWT_SECRET);
   if (verified) {

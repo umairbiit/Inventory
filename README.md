@@ -121,42 +121,39 @@ x-www-form-urlencoded :
 
 ### Reset Password
 
-![Reset Password View](https://github.com/TalhaHunter10/MERN-Auth-Boilerplate/blob/main/Sample%20Views/forgot%20password.png?raw=true)
+![Reset Password View](https://github.com/TalhaHunter10/MERN-Auth-Boilerplate/blob/main/Sample%20Views/reset%20password.png?raw=true)
 
 ## FAQ
 
-1. **How to login as Admin once we have created it using postman ?**
-   -Whenever you login using the admin credentials, the system opens the admin dashboard as there is no normal view for the admin.
+1. **How do I login as an admin once I’ve created it using Postman?**
 
-2. **What is the Auto Workshop Management System?**
+   - After creating an admin user via Postman (or directly in the database), simply log in with those admin credentials. The system will automatically show the admin view instead of the normal user view.
 
-   - It’s a web application designed to help automobile workshops manage their operations, including appointments, inventory, financial tracking, and customer support.
+2. **What is the MERN Authentication Boilerplate?**
 
-3. **Who can use this system?**
+   - It’s a ready-to-use starter template for MERN stack applications with built-in JWT authentication, role-based access control, and user session management.
 
-   - The system is designed for both workshop managers and customers. Workshop managers can use it for managing operations, while customers can use it for booking appointments and getting support.
+3. **Who can use this boilerplate?**
 
-4. **How do I book an appointment?**
+   - Developers who want to quickly start a full-stack MERN project without setting up authentication from scratch. It supports both normal users and admin roles.
 
-   - Simply create an account, navigate to the 'Book Appointment' section, provide your car details and problem description, and submit the request.
+4. **How do I test the login feature?**
 
-5. **Can I edit or cancel an appointment after booking?**
+   - Create a user via the registration endpoint or Postman, then use the login page with those credentials to access the protected routes.
 
-   - Yes, you can edit or cancel your appointment from your dashboard, provided the appointment status is still pending.
+5. **Can I create multiple roles?**
 
-6. **How is my data secured?**
+   - Yes, the boilerplate is structured to support role-based access. You can easily extend it for additional roles beyond `user` and `admin`.
 
-   - We use JWT (JSON Web Token) for secure user authentication, and all sensitive information, like passwords, is encrypted using bcrypt.
+6. **How is data secured?**
 
-7. **How do I reset my password if I forget it?**
+   - User authentication is handled via JWT (JSON Web Token), and passwords are securely hashed using bcrypt.
 
-   - Click on the ‘Forgot Password’ link on the login page. You’ll receive an email with instructions to reset your password.
+7. **How do I reset a password?**
 
-8. **Where do I get the OpenAI API key?**
-   - To get an OpenAI API key, follow these steps:
-     1. Go to [OpenAI's platform website](https://platform.openai.com/).
-     2. Log in with your OpenAI account, or sign up if you don't have one.
-     3. Navigate to the **API Keys** section in your account settings.
-     4. Click on **Create new secret key**, then copy and save it in a secure place.
+   - The boilerplate includes a password reset API. You can integrate it with your frontend to allow users to request a reset link via email.
 
-**Important:** Keep your API key private. Do not expose it in your code or public repositories.
+8. **Where do I set environment variables?**
+   - Create a `.env` file in both the `server` and `client` directories (if needed) and configure variables like `MONGO_URI`, `JWT_SECRET`, and other required settings.
+
+**Important:** Never commit `.env` files to your repository. Keep all secrets private.

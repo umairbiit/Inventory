@@ -17,13 +17,11 @@ export const UserProvider = ({ children }) => {
 
       if (statusRes.data?.verified) {
         const userRes = await getUserDetails();
-
         if (userRes.status === 200) {
           setUser(userRes.data);
           return;
         }
       }
-
       await logoutUser();
     } catch (error) {
       await logoutUser();

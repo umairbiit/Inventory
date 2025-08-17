@@ -1,5 +1,5 @@
-const Sale = require("../models/sale").default;
-const Expense = require("../models/expense").default;
+const Sale = require("../models/sale");
+const Expense = require("../models/expense");
 const dayjs = require("dayjs");
 
 // Get Profit/Loss for a period

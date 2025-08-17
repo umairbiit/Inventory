@@ -29,8 +29,14 @@ app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 // routes
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes"); // ✅ added
+const expenseRoutes = require("./routes/expenseRoutes");
+const saleRoutes = require("./routes/saleRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes); // ✅ added
+app.use("/api/expenses", expenseRoutes);
+app.use("/api/sales", saleRoutes);
+app.use("/api/reports", reportRoutes);
 
 //port
 const port = process.env.PORT || 8008;

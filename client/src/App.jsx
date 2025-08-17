@@ -9,7 +9,7 @@ import Register from "./screens/auth/Register";
 import VerifyEmail from "./screens/auth/VerifyEmail";
 import ForgotPassword from "./screens/auth/ForgotPassword";
 import ResetPassword from "./screens/auth/ResetPassword";
-import Layout from "./screens/Layout/MainLayout";
+import Layout from "./screens/layout/MainLayout";
 
 axios.defaults.withCredentials = true;
 

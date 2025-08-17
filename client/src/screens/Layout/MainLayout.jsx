@@ -10,13 +10,12 @@ import {
 import { Button, Layout, Menu, theme } from "antd";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
+import Products from "../products/Products";
+import Expenses from "../expense/expense";
+import Sales from "../sale/Sale";
+import Report from "../report/Report";
 
 const { Header, Sider, Content } = Layout;
-
-// Dummy Pages
-const Products = () => <h2>Products Page</h2>;
-const Expenses = () => <h2>Expenses Page</h2>;
-const Profile = () => <h2>Profile Page</h2>;
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -49,7 +48,12 @@ const MainLayout = () => {
             {
               key: "3",
               icon: <UserOutlined />,
-              label: <Link to="/profile">Profile</Link>,
+              label: <Link to="/sale">Sale</Link>,
+            },
+            {
+              key: "4",
+              icon: <UserOutlined />,
+              label: <Link to="/report">Report</Link>,
             },
           ]}
         />
@@ -102,7 +106,8 @@ const MainLayout = () => {
           <Routes>
             <Route path="/products" element={<Products />} />
             <Route path="/expenses" element={<Expenses />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/sale" element={<Sales />} />
+            <Route path="/report" element={<Report />} />
             <Route path="/" element={<h2>Welcome! Select a menu item</h2>} />
           </Routes>
         </Content>

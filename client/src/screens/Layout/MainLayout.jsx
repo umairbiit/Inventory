@@ -108,7 +108,7 @@ const MainLayout = () => {
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/sale" element={<Sales />} />
             <Route path="/report" element={<Report />} />
-            <Route path="/" element={<h2>Welcome! Select a menu item</h2>} />
+            <Route path="/" element={<Products />} />
           </Routes>
         </Content>
       </Layout>

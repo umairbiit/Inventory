@@ -5,7 +5,7 @@ const dayjs = require("dayjs");
 // Get Profit/Loss for a period
 const getProfitLoss = async (req, res) => {
   try {
-    console.log("HERE")
+    console.log("HERE");
     const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate)
@@ -18,7 +18,7 @@ const getProfitLoss = async (req, res) => {
     const sales = await Sale.find({
       date: { $gte: start, $lte: end },
       user: req.user._id,
-    }).populate("product", "costPrice");
+    }).populate("product", "costPrice name");
 
     // Fetch expenses in the period
     const expenses = await Expense.find({
@@ -47,10 +47,24 @@ const getProfitLoss = async (req, res) => {
       totalCost,
       totalExpenses,
       profit,
+      sales: sales.map((s) => ({
+        productName: s.product.name,
+        quantity: s.quantity,
+        salePrice: s.salePrice,
+        discount: s.discount,
+        totalAmount: (s.salePrice || 0) * s.quantity,
+        date: s.date,
+      })),
+      expenses: expenses.map((e) => ({
+        description: e.description,
+        amount: e.amount,
+        date: e.date,
+      })),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 module.exports = { getProfitLoss };

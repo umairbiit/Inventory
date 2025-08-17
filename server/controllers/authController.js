@@ -111,6 +111,7 @@ const login = asyncHandler(async (req, res) => {
 
   // Find the user by email
   const user = await User.findOne({ email });
+  console.log("User:: ", user)
 
   if (!user) {
     return res.status(400).json({ message: "Invalid email or password" });
@@ -118,6 +119,7 @@ const login = asyncHandler(async (req, res) => {
 
   // Check if password matches
   const isMatch = await bcrypt.compare(password, user.password);
+  console.log("isMatch:: ", isMatch)
   if (!isMatch) {
     return res.status(400).json({ message: "Invalid email or password" });
   }

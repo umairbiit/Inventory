@@ -28,7 +28,9 @@ app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 
 // routes
 const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes"); // ✅ added
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes); // ✅ added
 
 //port
 const port = process.env.PORT || 8008;

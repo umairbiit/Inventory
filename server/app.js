@@ -32,6 +32,8 @@ const productRoutes = require("./routes/productRoutes"); // ✅ added
 const expenseRoutes = require("./routes/expenseRoutes");
 const saleRoutes = require("./routes/saleRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const customerRoutes = require("./routes/customerRoutes");
+app.use("/api/customers", customerRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes); // ✅ added
 app.use("/api/expenses", expenseRoutes);

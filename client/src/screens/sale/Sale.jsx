@@ -9,6 +9,7 @@ import {
   Space,
   Popconfirm,
   message,
+  Typography,
 } from "antd";
 import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -19,14 +20,18 @@ import {
   deleteSale as deleteSaleService,
 } from "../../services/saleServices";
 import { getProducts as fetchProductsService } from "../../services/productServices";
+import { getCustomers as fetchCustomersService } from "../../services/customerService";
 
 const { Option } = Select;
+const { Text } = Typography;
 
 const Sales = () => {
   const [sales, setSales] = useState([]);
   const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   const [form] = Form.useForm();
 
@@ -43,7 +48,7 @@ const Sales = () => {
     }
   };
 
-  // Fetch products for dropdown
+  // Fetch products
   const fetchProducts = async () => {
     try {
       const { data } = await fetchProductsService();
@@ -53,18 +58,56 @@ const Sales = () => {
     }
   };
 
+  // Fetch customers
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetchCustomersService();
+      if (res.success) {
+        setCustomers(res.customers);
+      } else {
+        message.error(res.message || "Failed to fetch customers");
+      }
+    } catch (error) {
+      message.error("Failed to fetch customers");
+    }
+  };
+
   useEffect(() => {
     fetchSales();
     fetchProducts();
+    fetchCustomers();
   }, []);
 
   const openDrawer = () => {
     form.resetFields();
+    setTotalAmount(0);
     setDrawerVisible(true);
   };
 
   const closeDrawer = () => {
     setDrawerVisible(false);
+  };
+
+  // Auto-fill salePrice when product changes
+  const handleProductChange = (productId) => {
+    const selectedProduct = products.find((p) => p._id === productId);
+    if (selectedProduct) {
+      form.setFieldsValue({
+        salePrice: selectedProduct.salePrice,
+      });
+
+      const values = form.getFieldsValue();
+      const { quantity = 0, discount = 0 } = values;
+      const total = quantity * selectedProduct.salePrice - discount;
+      setTotalAmount(total > 0 ? total : 0);
+    }
+  };
+
+  // Recalculate total when fields change
+  const handleFormChange = (_, allValues) => {
+    const { quantity = 0, salePrice = 0, discount = 0 } = allValues;
+    const total = quantity * salePrice - discount;
+    setTotalAmount(total > 0 ? total : 0);
   };
 
   const handleSubmit = async (values) => {
@@ -90,6 +133,7 @@ const Sales = () => {
 
   const columns = [
     { title: "Product", dataIndex: ["product", "name"], key: "product" },
+    { title: "Customer", dataIndex: ["customer", "name"], key: "customer" },
     { title: "Quantity", dataIndex: "quantity", key: "quantity" },
     { title: "Sale Price", dataIndex: "salePrice", key: "salePrice" },
     { title: "Discount", dataIndex: "discount", key: "discount" },
@@ -138,13 +182,19 @@ const Sales = () => {
         open={drawerVisible}
         bodyStyle={{ paddingBottom: 80 }}
       >
-        <Form layout="vertical" form={form} onFinish={handleSubmit}>
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={handleSubmit}
+          onValuesChange={handleFormChange}
+        >
+          {/* Product Dropdown */}
           <Form.Item
             name="product"
             label="Product"
             rules={[{ required: true, message: "Please select a product" }]}
           >
-            <Select placeholder="Select product">
+            <Select placeholder="Select product" onChange={handleProductChange}>
               {products.map((p) => (
                 <Option key={p._id} value={p._id}>
                   {p.name} (Stock: {p.stock})
@@ -153,6 +203,22 @@ const Sales = () => {
             </Select>
           </Form.Item>
 
+          {/* Customer Dropdown */}
+          <Form.Item
+            name="customer"
+            label="Customer"
+            rules={[{ required: true, message: "Please select a customer" }]}
+          >
+            <Select placeholder="Select customer">
+              {customers.map((c) => (
+                <Option key={c._id} value={c._id}>
+                  {c.name} ({c.email || "No email"})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {/* Quantity */}
           <Form.Item
             name="quantity"
             label="Quantity"
@@ -161,10 +227,28 @@ const Sales = () => {
             <InputNumber min={1} style={{ width: "100%" }} />
           </Form.Item>
 
+          {/* Sale Price (auto-filled but editable) */}
+          <Form.Item
+            name="salePrice"
+            label="Sale Price"
+            rules={[{ required: true, message: "Please enter sale price" }]}
+          >
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          {/* Discount */}
           <Form.Item name="discount" label="Discount">
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
 
+          {/* Total Amount */}
+          <Form.Item label="Total Amount">
+            <Text strong style={{ fontSize: 16 }}>
+              {totalAmount} PKR
+            </Text>
+          </Form.Item>
+
+          {/* Buttons */}
           <Form.Item>
             <Space>
               <Button onClick={closeDrawer}>Cancel</Button>

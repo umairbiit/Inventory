@@ -4,10 +4,10 @@ const Product = require("../models/product").default;
 // Create Sale
 const createSale = async (req, res) => {
   try {
-    const { product, quantity, discount } = req.body;
+    const { product, customer, quantity, discount } = req.body;
 
-    if (!product || !quantity) {
-      return res.status(400).json({ success: false, message: "Product and quantity are required" });
+    if (!product || !customer || !quantity) {
+      return res.status(400).json({ success: false, message: "Product, customer, and quantity are required" });
     }
 
     const prod = await Product.findById(product);
@@ -17,12 +17,11 @@ const createSale = async (req, res) => {
       return res.status(400).json({ success: false, message: "Not enough stock available" });
     }
 
-    // Final sale price after discount
     const salePrice = prod.salePrice - (discount || 0);
 
-    // Create sale
     const sale = await Sale.create({
       product,
+      customer,
       quantity,
       salePrice,
       discount: discount || 0,
@@ -30,7 +29,6 @@ const createSale = async (req, res) => {
       user: req.user._id,
     });
 
-    // Reduce product stock
     prod.stock -= quantity;
     await prod.save();
 
@@ -40,18 +38,20 @@ const createSale = async (req, res) => {
   }
 };
 
+
 // Get all Sales
 const getSales = async (req, res) => {
   try {
     const sales = await Sale.find({ user: req.user._id })
       .populate("product", "name costPrice salePrice")
+      .populate("customer", "name email phone") // NEW
       .sort({ date: -1 });
+
     res.status(200).json({ success: true, sales });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // Delete Sale (and restore product stock)
 const deleteSale = async (req, res) => {
   try {

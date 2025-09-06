@@ -2,23 +2,34 @@ const Sale = require("../models/sale");
 const Expense = require("../models/expense");
 const dayjs = require("dayjs");
 
-// Get Profit/Loss for a period
+// Get Profit/Loss for a period (with optional customer filter)
 const getProfitLoss = async (req, res) => {
   try {
-    console.log("HERE");
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, customer } = req.query;
 
     if (!startDate || !endDate)
-      return res.status(400).json({ success: false, message: "startDate and endDate required" });
+      return res.status(400).json({
+        success: false,
+        message: "startDate and endDate required",
+      });
 
     const start = dayjs(startDate).startOf("day").toDate();
     const end = dayjs(endDate).endOf("day").toDate();
 
-    // Fetch sales in the period
-    const sales = await Sale.find({
+    // Build query for sales
+    const saleQuery = {
       date: { $gte: start, $lte: end },
       user: req.user._id,
-    }).populate("product", "costPrice name");
+    };
+
+    if (customer) {
+      saleQuery.customer = customer; // filter by customer if provided
+    }
+
+    // Fetch sales in the period (populate product and customer name)
+    const sales = await Sale.find(saleQuery)
+      .populate("product", "costPrice name")
+      .populate("customer", "name");
 
     // Fetch expenses in the period
     const expenses = await Expense.find({
@@ -49,6 +60,7 @@ const getProfitLoss = async (req, res) => {
       profit,
       sales: sales.map((s) => ({
         productName: s.product.name,
+        customerName: s.customer?.name || "-", // include customer name
         quantity: s.quantity,
         salePrice: s.salePrice,
         discount: s.discount,
@@ -65,6 +77,5 @@ const getProfitLoss = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 module.exports = { getProfitLoss };

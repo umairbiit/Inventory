@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { createProduct, getProducts, updateProduct, deleteProduct } = require("../controllers/productController");
+const {
+  createProduct,
+  getProducts,
+  updateProduct,
+  deleteProduct,
+} = require("../controllers/productController");
 const protect = require("../middlewares/authMiddleware");
 
 // Only protect create, update, delete routes

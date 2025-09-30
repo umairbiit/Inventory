@@ -4,13 +4,24 @@ import Product from "../models/Product.js";
 export const createProduct = async (req, res) => {
   try {
     console.log("Creating product with data:", req.body);
-    const { name, description, costPrice, salePrice, stock, category } = req.body;
+    const { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber } = req.body;
 
     if (!name || costPrice == null || salePrice == null) {
-      return res.status(400).json({ success: false, message: "Name, costPrice, and salePrice are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Name, costPrice, and salePrice are required" });
     }
 
-    const product = await Product.create({ name, description, costPrice, salePrice, stock, category });
+    const product = await Product.create({
+      name,
+      description,
+      costPrice,
+      salePrice,
+      stock,
+      category,
+      expirationDate,
+      batchNumber,
+    });
 
     res.status(201).json({ success: true, product });
   } catch (error) {
@@ -32,7 +43,8 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
 
     res.status(200).json({ success: true, product });
   } catch (error) {
@@ -43,15 +55,16 @@ export const getProductById = async (req, res) => {
 // Update Product
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, costPrice, salePrice, stock, category } = req.body;
+    const { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber } = req.body;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, costPrice, salePrice, stock, category },
+      { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber },
       { new: true, runValidators: true }
     );
 
-    if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
 
     res.status(200).json({ success: true, product });
   } catch (error) {
@@ -64,7 +77,8 @@ export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
 
-    if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
 
     res.status(200).json({ success: true, message: "Product deleted" });
   } catch (error) {

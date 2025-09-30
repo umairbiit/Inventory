@@ -30,6 +30,25 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "General",
     },
+    expirationDate: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          // Allow null/undefined (optional field)
+          if (!value) return true;
+          return value > new Date();
+        },
+        message: "Expiration date must be in the future",
+      },
+      default: null,
+    },
+    batchNumber: {
+      type: String,
+      trim: true,
+      unique: true, // enforce uniqueness at database level
+      sparse: true, // allows multiple null/empty values
+      default: "",
+    },
   },
   { timestamps: true }
 );

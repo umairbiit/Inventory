@@ -37,3 +37,17 @@ export const deleteSale = async (saleId) => {
     return error.response;
   }
 };
+
+// ✅ NEW — Update payment for a sale
+export const updateSalePayment = async (saleId, amount) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/api/sales/${saleId}/payment`,
+      { amount },
+      { withCredentials: true }
+    );
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+};

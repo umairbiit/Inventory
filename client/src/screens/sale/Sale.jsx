@@ -111,7 +111,6 @@ const Sales = () => {
     const res = await updateSalePaymentService(selectedSale._id, newPayment);
     if (res?.data?.success && res?.data?.sale) {
       message.success("Payment updated");
-      console.log(res.data)
       generateReceipt(res.data.sale); // <-- generate PDF
       fetchSales();
     } else {
@@ -355,7 +354,12 @@ const Sales = () => {
                             const selectedProduct = products.find((p) => p._id === productId);
                             if (selectedProduct) {
                               const currentItems = form.getFieldValue("items");
-                              currentItems[index].salePrice = selectedProduct.salePrice;
+                              currentItems[index] = {
+                                ...currentItems[index],
+                                salePrice: selectedProduct.salePrice,
+                                batchNumber: selectedProduct.batchNumber || "N/A",
+                                expiryDate: selectedProduct.expiryDate || null,
+                              };
                               form.setFieldsValue({ items: currentItems });
                             }
                           }}

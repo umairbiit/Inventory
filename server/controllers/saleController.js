@@ -60,8 +60,8 @@ const createSale = async (req, res) => {
 
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
-      .populate("customer", "name email phone")
-      .populate("items.product", "name costPrice salePrice");
+      .populate("customer", "name email phone address")
+      .populate("items.product", "name costPrice salePrice batchNumber expirationDate");
 
     res.status(201).json({ success: true, sale });
   } catch (error) {
@@ -115,8 +115,8 @@ const updateSalePayment = async (req, res) => {
 
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
-      .populate("customer", "name email phone")
-      .populate("items.product", "name costPrice salePrice");
+      .populate("customer", "name email phone address")
+      .populate("items.product", "name costPrice salePrice batchNumber expirationDate");
 
     res.json({ success: true, sale });
   } catch (error) {

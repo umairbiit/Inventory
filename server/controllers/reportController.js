@@ -5,67 +5,91 @@ const dayjs = require("dayjs");
 // Get Profit/Loss for a period (with optional customer filter)
 const getProfitLoss = async (req, res) => {
   try {
-    const { startDate, endDate, customer } = req.query;
+    const { startDate, endDate, customer, includeUnpaid } = req.query;
 
-    if (!startDate || !endDate)
+    if (!startDate || !endDate) {
       return res.status(400).json({
         success: false,
-        message: "startDate and endDate required",
+        message: "startDate and endDate are required",
       });
+    }
 
     const start = dayjs(startDate).startOf("day").toDate();
     const end = dayjs(endDate).endOf("day").toDate();
 
-    // Build query for sales
+    // 🔹 Build sale query
     const saleQuery = {
       date: { $gte: start, $lte: end },
       user: req.user._id,
     };
+    if (customer) saleQuery.customer = customer;
 
-    if (customer) {
-      saleQuery.customer = customer; // filter by customer if provided
-    }
-
-    // Fetch sales in the period (populate product and customer name)
+    // 🔹 Fetch sales with product + customer info
     const sales = await Sale.find(saleQuery)
-      .populate("product", "costPrice name")
+      .populate("items.product", "name costPrice salePrice")
       .populate("customer", "name");
 
-    // Fetch expenses in the period
+    // 🔹 Fetch expenses
     const expenses = await Expense.find({
       date: { $gte: start, $lte: end },
       user: req.user._id,
     });
 
-    // Calculate total sales amount and cost
     let totalSalesAmount = 0;
     let totalCost = 0;
+    let pendingAmount = 0;
+    let totalExpenses = 0;
 
+    // 🔹 Loop through each sale
     sales.forEach((sale) => {
-      totalSalesAmount += (sale.salePrice || 0) * sale.quantity;
-      totalCost += (sale.product.costPrice || 0) * sale.quantity;
+      const totalAmount = sale.totalAmount || 0;
+      const received = sale.paymentReceived || 0;
+      const balance = sale.balance || 0;
+
+      // Sum cost for all items
+      const saleCost = (sale.items || []).reduce((sum, it) => {
+        const cost = (it.product?.costPrice || 0) * it.quantity;
+        return sum + cost;
+      }, 0);
+
+      totalSalesAmount += received;
+      totalCost += saleCost;
+      pendingAmount += balance;
     });
 
-    // Total expenses
-    let totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
-    // Profit or Loss
+    // 🔹 Profit only on received payments
     const profit = totalSalesAmount - totalCost - totalExpenses;
+
+    // 🔹 Optional: Expected profit (including pending balances)
+    const expectedProfit =
+      includeUnpaid === "true"
+        ? totalSalesAmount + pendingAmount - totalCost - totalExpenses
+        : profit;
 
     res.status(200).json({
       success: true,
       totalSalesAmount,
       totalCost,
       totalExpenses,
+      pendingAmount,
       profit,
+      expectedProfit,
       sales: sales.map((s) => ({
-        productName: s.product.name,
-        customerName: s.customer?.name || "-", // include customer name
-        quantity: s.quantity,
-        salePrice: s.salePrice,
-        discount: s.discount,
-        totalAmount: (s.salePrice || 0) * s.quantity,
+        customerName: s.customer?.name || "-",
+        totalAmount: s.totalAmount,
+        paymentReceived: s.paymentReceived,
+        balance: s.balance,
+        paymentStatus: s.paymentStatus,
         date: s.date,
+        items: s.items.map((i) => ({
+          productName: i.product?.name || "-",
+          quantity: i.quantity,
+          salePrice: i.salePrice,
+          discount: i.discount,
+          costPrice: i.product?.costPrice,
+        })),
       })),
       expenses: expenses.map((e) => ({
         description: e.description,

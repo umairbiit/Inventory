@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { DatePicker, Select, Button, Card, Table, message } from "antd";
+import { DatePicker, Select, Button, Card, Table, message, Space } from "antd";
 import dayjs from "dayjs";
 import axios from "axios";
 import jsPDF from "jspdf";
@@ -14,9 +14,10 @@ const Report = () => {
   const [report, setReport] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [loading, setLoading] = useState(false);
   const API_URL = import.meta.env.VITE_BACKEND_URL;
 
-  // Fetch customers for filter
+  // Fetch customers
   const fetchCustomers = async () => {
     try {
       const res = await fetchCustomersService();
@@ -31,11 +32,13 @@ const Report = () => {
     fetchCustomers();
   }, []);
 
+  // Fetch Profit/Loss report
   const fetchReport = async () => {
     if (!dates || dates.length !== 2)
       return message.error("Select start and end dates");
 
     try {
+      setLoading(true);
       const startDate = dayjs(dates[0]).format("YYYY-MM-DD");
       const endDate = dayjs(dates[1]).format("YYYY-MM-DD");
 
@@ -50,13 +53,18 @@ const Report = () => {
       setReport(data);
     } catch (error) {
       message.error("Failed to fetch report");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Generate PDF report
   const downloadPDF = () => {
     if (!report) return message.error("Generate report first");
 
     const doc = new jsPDF();
+
+    // Header
     doc.setFontSize(16);
     doc.text("Profit & Loss Report", 14, 20);
     doc.setFontSize(12);
@@ -69,19 +77,39 @@ const Report = () => {
     );
 
     if (selectedCustomer) {
-      const customerObj = customers.find(c => c._id === selectedCustomer);
+      const customerObj = customers.find((c) => c._id === selectedCustomer);
       doc.text(`Customer: ${customerObj?.name || ""}`, 14, 36);
     }
 
-    doc.text(`Total Sales: Rs. ${report.totalSalesAmount}`, 14, 44);
-    doc.text(`Total Cost: Rs. ${report.totalCost}`, 14, 52);
-    doc.text(`Total Expenses: Rs. ${report.totalExpenses}`, 14, 60);
-    doc.text(`Profit / Loss: Rs. ${report.profit}`, 14, 68);
+    // Summary
+    const summaryStartY = selectedCustomer ? 44 : 36;
+    doc.text(`Total Sales: Rs. ${report.totalSalesAmount}`, 14, summaryStartY);
+    doc.text(`Total Cost: Rs. ${report.totalCost}`, 14, summaryStartY + 8);
+    doc.text(
+      `Total Expenses: Rs. ${report.totalExpenses}`,
+      14,
+      summaryStartY + 16
+    );
+    doc.text(
+      `Profit / Loss: Rs. ${report.profit}`,
+      14,
+      summaryStartY + 24
+    );
 
     // Sales Table
     autoTable(doc, {
-      startY: 78,
-      head: [["Product", "Customer", "Quantity", "Unit Price", "Discount", "Total", "Date"]],
+      startY: summaryStartY + 34,
+      head: [
+        [
+          "Product",
+          "Customer",
+          "Quantity",
+          "Unit Price",
+          "Discount",
+          "Total",
+          "Date",
+        ],
+      ],
       body: report.sales.map((s) => [
         s.productName,
         s.customerName || "-",
@@ -91,7 +119,9 @@ const Report = () => {
         s.totalAmount,
         dayjs(s.date).format("YYYY-MM-DD"),
       ]),
-      theme: "grid",
+      theme: "striped",
+      styles: { fontSize: 9, valign: "middle" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     });
 
     // Expenses Table
@@ -103,8 +133,18 @@ const Report = () => {
         e.amount,
         dayjs(e.date).format("YYYY-MM-DD"),
       ]),
-      theme: "grid",
+      theme: "striped",
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [230, 126, 34], textColor: 255 },
     });
+
+    // Footer
+    doc.setFontSize(10);
+    doc.text(
+      `Generated on: ${dayjs().format("YYYY-MM-DD HH:mm")}`,
+      14,
+      doc.lastAutoTable.finalY + 12
+    );
 
     doc.save(
       `Profit_Loss_${dayjs(dates[0]).format("YYYYMMDD")}_${dayjs(
@@ -113,6 +153,7 @@ const Report = () => {
     );
   };
 
+  // Sales Table Columns
   const salesColumns = [
     { title: "Product", dataIndex: "productName", key: "productName" },
     { title: "Customer", dataIndex: "customerName", key: "customerName" },
@@ -128,6 +169,7 @@ const Report = () => {
     },
   ];
 
+  // Expenses Table Columns
   const expensesColumns = [
     { title: "Description", dataIndex: "description", key: "description" },
     { title: "Amount", dataIndex: "amount", key: "amount" },
@@ -140,14 +182,14 @@ const Report = () => {
   ];
 
   return (
-    <div>
-      <h2>Profit & Loss Report</h2>
+    <div style={{ padding: 16 }}>
+      <h2 style={{ marginBottom: 16 }}>Profit & Loss Report</h2>
 
-      <div style={{ display: "flex", marginBottom: 16, gap: 8 }}>
+      <Space style={{ marginBottom: 16 }} wrap>
         <RangePicker onChange={(dates) => setDates(dates)} />
         <Select
           placeholder="All Customers"
-          style={{ width: 200 }}
+          style={{ width: 220 }}
           allowClear
           onChange={(value) => setSelectedCustomer(value)}
         >
@@ -157,18 +199,18 @@ const Report = () => {
             </Option>
           ))}
         </Select>
-        <Button type="primary" onClick={fetchReport}>
+        <Button type="primary" onClick={fetchReport} loading={loading}>
           Get Report
         </Button>
         {report && (
-          <Button type="default" onClick={downloadPDF}>
+          <Button onClick={downloadPDF} disabled={!report}>
             Download PDF
           </Button>
         )}
-      </div>
+      </Space>
 
       {report && (
-        <div style={{ marginTop: 24 }}>
+        <div>
           <Card style={{ marginBottom: 24 }}>
             <p>Total Sales Amount: Rs. {report.totalSalesAmount}</p>
             <p>Total Cost: Rs. {report.totalCost}</p>
@@ -187,6 +229,8 @@ const Report = () => {
               dataSource={report.sales}
               rowKey={(record, index) => index}
               pagination={{ pageSize: 5 }}
+              bordered
+              size="small"
             />
           </Card>
 
@@ -196,6 +240,8 @@ const Report = () => {
               dataSource={report.expenses}
               rowKey={(record, index) => index}
               pagination={{ pageSize: 5 }}
+              bordered
+              size="small"
             />
           </Card>
         </div>

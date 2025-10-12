@@ -87,7 +87,6 @@ const getProfitLoss = async (req, res) => {
           productName: i.product?.name || "-",
           quantity: i.quantity,
           salePrice: i.salePrice,
-          discount: i.discount,
           costPrice: i.product?.costPrice,
         })),
       })),

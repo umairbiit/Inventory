@@ -50,18 +50,18 @@ const createSale = async (req, res) => {
       items: items.map((it) => ({
         product: it.product,
         quantity: it.quantity,
-        salePrice: it.salePrice, // from frontend
-        discount: it.discount || 0,
+        salePrice: it.salePrice,
       })),
+      invoiceNumber: req.body.invoiceNumber, // ✅ accept from frontend
       initialPayment: initialPayment || 0,
-      paymentReceived: initialPayment || 0, // set at least initialPayment
+      paymentReceived: initialPayment || 0,
       user: req.user._id,
     });
 
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
       .populate("customer", "name email phone address")
-      .populate("items.product", "name costPrice salePrice batchNumber expirationDate");
+      .populate("items.product", "name invoiceNumber costPrice salePrice retailPrice batchNumber expirationDate");
 
     res.status(201).json({ success: true, sale });
   } catch (error) {
@@ -116,7 +116,7 @@ const updateSalePayment = async (req, res) => {
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
       .populate("customer", "name email phone address")
-      .populate("items.product", "name costPrice salePrice batchNumber expirationDate");
+      .populate("items.product", "name invoiceNumber costPrice salePrice retailPrice batchNumber expirationDate");
 
     res.json({ success: true, sale });
   } catch (error) {

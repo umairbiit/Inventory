@@ -10,13 +10,17 @@ const SaleItemSchema = new Schema(
     },
     quantity: { type: Number, required: true, min: 1, default: 1 },
     salePrice: { type: Number, required: true, min: 0 },
-    discount: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
 
 const SaleSchema = new Schema(
   {
+    invoiceNumber: {
+      type: String,
+      required: true, // or false if you want it optional
+      unique: true, // optional, but good to prevent duplicates
+    },
     customer: {
       type: Schema.Types.ObjectId,
       ref: "Customer",
@@ -71,7 +75,7 @@ const SaleSchema = new Schema(
 // 🔹 Virtual totalAmount
 SaleSchema.virtual("totalAmount").get(function () {
   return (this.items || []).reduce(
-    (sum, it) => sum + it.quantity * it.salePrice - it.discount,
+    (sum, it) => sum + it.quantity * it.salePrice,
     0
   );
 });

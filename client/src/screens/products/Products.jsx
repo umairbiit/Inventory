@@ -107,6 +107,7 @@ const Products = () => {
     { title: "Description", dataIndex: "description", key: "description" },
     { title: "Cost Price", dataIndex: "costPrice", key: "costPrice" },
     { title: "Sale Price", dataIndex: "salePrice", key: "salePrice" },
+    { title: "Retail Price", dataIndex: "retailPrice", key: "retailPrice" },
     { title: "Stock", dataIndex: "stock", key: "stock" },
     { title: "Category", dataIndex: "category", key: "category" },
     {
@@ -191,6 +192,14 @@ const Products = () => {
             name="salePrice"
             label="Sale Price"
             rules={[{ required: true, message: "Please enter sale price" }]}
+          >
+            <InputNumber style={{ width: "100%" }} min={0} />
+          </Form.Item>
+
+          <Form.Item
+            name="retailPrice"
+            label="Retail Price"
+            rules={[{ required: true, message: "Please enter retail price" }]}
           >
             <InputNumber style={{ width: "100%" }} min={0} />
           </Form.Item>

@@ -4,12 +4,12 @@ import Product from "../models/product.js";
 export const createProduct = async (req, res) => {
   try {
     console.log("Creating product with data:", req.body);
-    const { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber } = req.body;
+    const { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, batchNumber } = req.body;
 
     if (!name || costPrice == null || salePrice == null) {
       return res
         .status(400)
-        .json({ success: false, message: "Name, costPrice, and salePrice are required" });
+        .json({ success: false, message: "Name, costPrice, salePrice and retailPrice are required" });
     }
 
     const product = await Product.create({
@@ -17,6 +17,7 @@ export const createProduct = async (req, res) => {
       description,
       costPrice,
       salePrice,
+      retailPrice,
       stock,
       category,
       expirationDate,
@@ -59,7 +60,7 @@ export const updateProduct = async (req, res) => {
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber },
+      { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, batchNumber },
       { new: true, runValidators: true }
     );
 

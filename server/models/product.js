@@ -21,6 +21,11 @@ const productSchema = new mongoose.Schema(
       required: [true, "Sale price is required"],
       min: 0,
     },
+    retailPrice: {
+      type: Number,
+      required: [true, "Retail price is required"],
+      min: 0,
+    },
     stock: {
       type: Number,
       default: 0, // current stock quantity

@@ -14,6 +14,7 @@ import {
   Row,
   Col,
   Modal,
+  Input,
 } from "antd";
 import { PlusOutlined, DeleteOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -128,11 +129,9 @@ const Sales = () => {
     return items.reduce((sum, item) => {
       const q = Number(item?.quantity) || 0;
       const sp = Number(item?.salePrice) || 0;
-      const disc = Number(item?.discount) || 0;
-      return sum + q * sp - disc;
+      return sum + q * sp;
     }, 0);
   };
-
   const calcRemaining = () => {
     const total = calcTotalAmount();
     return Math.max(total - (Number(initialPayment) || 0), 0);
@@ -143,6 +142,7 @@ const Sales = () => {
       const res = await createSaleService({
         customer: values.customer,
         items: values.items,
+        invoiceNumber: values.invoiceNumber,
         initialPayment: values.initialPayment || 0,
       });
 
@@ -170,6 +170,11 @@ const Sales = () => {
     }
   };
 
+  const calculateDiscount = (salePrice, retailPrice) => {
+    if (!retailPrice || retailPrice === 0) return 0;
+    return Math.max(((retailPrice - salePrice) / retailPrice) * 100, 0).toFixed(2);
+  };
+
   // Table columns
   const columns = [
     {
@@ -184,8 +189,7 @@ const Sales = () => {
         <div>
           {record.items.map((item, idx) => (
             <div key={idx}>
-              {item.product?.name} x{item.quantity} (Price: {item.salePrice} – Disc:{" "}
-              {item.discount})
+              {item.product?.name} x{item.quantity} (Price: {item.salePrice})
             </div>
           ))}
         </div>
@@ -237,6 +241,7 @@ const Sales = () => {
             type="link"
             icon={<DollarCircleOutlined style={{ color: "#52c41a" }} />}
             onClick={() => handleUpdatePaymentClick(record)}
+            disabled={record.paymentStatus === "paid"}
           >
           </Button>
 
@@ -306,12 +311,19 @@ const Sales = () => {
 
       <Drawer
         title="Record New Sale"
-        width={700}
+        width={800}
         onClose={closeDrawer}
         open={drawerVisible}
         bodyStyle={{ paddingBottom: 80 }}
       >
         <Form layout="vertical" form={form} onFinish={handleSubmit}>
+          <Form.Item
+            name="invoiceNumber"
+            label="Invoice Number"
+            rules={[{ required: true, message: "Please enter an invoice number" }]}
+          >
+            <Input style={{ width: "100%" }} placeholder="Enter invoice number" />
+          </Form.Item>
           {/* Customer */}
           <Form.Item
             name="customer"
@@ -333,7 +345,8 @@ const Sales = () => {
               <>
                 {fields.map(({ key, name, ...restField }, index) => (
                   <Row gutter={8} key={key} style={{ marginBottom: 8 }}>
-                    <Col span={9}>
+                    {/* Product Selector */}
+                    <Col span={8}>
                       <Form.Item
                         {...restField}
                         name={[name, "product"]}
@@ -357,8 +370,13 @@ const Sales = () => {
                               currentItems[index] = {
                                 ...currentItems[index],
                                 salePrice: selectedProduct.salePrice,
+                                retailPrice: selectedProduct.retailPrice,
+                                discount: calculateDiscount(
+                                  selectedProduct.salePrice,
+                                  selectedProduct.retailPrice
+                                ),
                                 batchNumber: selectedProduct.batchNumber || "N/A",
-                                expiryDate: selectedProduct.expiryDate || null,
+                                expiryDate: selectedProduct.expirationDate || null,
                               };
                               form.setFieldsValue({ items: currentItems });
                             }
@@ -389,6 +407,7 @@ const Sales = () => {
                       </Form.Item>
                     </Col>
 
+                    {/* Quantity */}
                     <Col span={4}>
                       <Form.Item
                         {...restField}
@@ -400,28 +419,58 @@ const Sales = () => {
                       </Form.Item>
                     </Col>
 
+                    {/* Sale Price */}
                     <Col span={4}>
                       <Form.Item
                         {...restField}
                         name={[name, "salePrice"]}
-                        label="Price"
-                        rules={[{ required: true, message: "Enter price" }]}
+                        label="Sale Price"
+                        rules={[{ required: true, message: "Enter sale price" }]}
                       >
-                        <InputNumber min={0} style={{ width: "100%" }} />
+                        <InputNumber
+                          min={0}
+                          style={{ width: "100%" }}
+                          onChange={(value) => {
+                            const currentItems = form.getFieldValue("items");
+                            const retail = currentItems[index]?.retailPrice || 0;
+                            currentItems[index].salePrice = value;
+                            currentItems[index].discount = calculateDiscount(value, retail);
+                            form.setFieldsValue({ items: currentItems });
+                          }}
+                        />
                       </Form.Item>
                     </Col>
 
+                    {/* Retail Price (Read-only display) */}
                     <Col span={4}>
                       <Form.Item
                         {...restField}
-                        name={[name, "discount"]}
-                        label="Discount"
+                        name={[name, "retailPrice"]}
+                        label="Retail Price"
                       >
-                        <InputNumber min={0} style={{ width: "100%" }} />
+                        <InputNumber min={0} disabled style={{ width: "100%" }} />
                       </Form.Item>
                     </Col>
 
-                    <Col span={3} style={{ display: "flex", alignItems: "center" }}>
+                    {/* Discount % (Auto Calculated) */}
+                    <Col span={3}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "discount"]}
+                        label="Discount %"
+                      >
+                        <InputNumber
+                          min={0}
+                          max={100}
+                          precision={2}
+                          disabled
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+                    </Col>
+
+                    {/* Remove Button */}
+                    <Col span={1} style={{ display: "flex", alignItems: "center" }}>
                       <Button danger onClick={() => remove(name)}>
                         X
                       </Button>
@@ -442,6 +491,7 @@ const Sales = () => {
               </>
             )}
           </Form.List>
+
 
 
           <Divider />

@@ -3,7 +3,6 @@ import Product from "../models/product.js";
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    console.log("Creating product with data:", req.body);
     const { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, batchNumber } = req.body;
 
     if (!name || costPrice == null || salePrice == null) {

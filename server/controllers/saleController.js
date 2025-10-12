@@ -3,7 +3,6 @@ const Product = require("../models/product").default;
 
 // ✅ Create Sale (multi-item + partial payment)
 const createSale = async (req, res) => {
-  console.log("Create Sale Request Body:", req.body);
   try {
     const { items, customer, initialPayment } = req.body;
 

@@ -55,7 +55,17 @@ export const getProductById = async (req, res) => {
 // Update Product
 export const updateProduct = async (req, res) => {
   try {
-    const { name, description, costPrice, salePrice, stock, category, expirationDate, batchNumber } = req.body;
+    const {
+      name,
+      description,
+      costPrice,
+      salePrice,
+      retailPrice,
+      stock,
+      category,
+      expirationDate,
+      batchNumber
+    } = req.body;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -68,9 +78,11 @@ export const updateProduct = async (req, res) => {
 
     res.status(200).json({ success: true, product });
   } catch (error) {
+    console.error(error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 // Delete Product
 export const deleteProduct = async (req, res) => {

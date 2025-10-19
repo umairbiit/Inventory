@@ -22,6 +22,9 @@ const createSale = async (req, res) => {
     // --- Validate stock for each product ---
     for (const item of items) {
       const prod = await Product.findById(item.product);
+      if(prod){
+        prod.salePrice = item.salePrice;
+      }
       if (!prod) {
         return res.status(404).json({
           success: false,
@@ -59,8 +62,21 @@ const createSale = async (req, res) => {
 
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
-      .populate("customer", "name email phone address")
-      .populate("items.product", "name invoiceNumber costPrice salePrice retailPrice batchNumber expirationDate");
+  .populate("customer", "name email phone address")
+  .populate({
+    path: "items.product",
+    select: "name description invoiceNumber costPrice retailPrice batchNumber expirationDate",
+  })
+  .lean();
+
+sale.items = sale.items.map((item) => ({
+  ...item,
+  product: {
+    ...item.product,
+    salePrice: item.salePrice, // ✅ override with per-sale price
+  },
+}));
+
 
     res.status(201).json({ success: true, sale });
   } catch (error) {
@@ -83,6 +99,7 @@ const getSales = async (req, res) => {
   }
 };
 
+
 // ✅ Update Payment Received (partial payments)
 const updateSalePayment = async (req, res) => {
   try {
@@ -90,12 +107,16 @@ const updateSalePayment = async (req, res) => {
     const { amount } = req.body; // how much was newly received (additional)
 
     if (amount == null || isNaN(amount)) {
-      return res.status(400).json({ success: false, message: "Amount is required." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Amount is required." });
     }
 
     let sale = await Sale.findOne({ _id: id, user: req.user._id });
     if (!sale) {
-      return res.status(404).json({ success: false, message: "Sale not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Sale not found" });
     }
 
     // ✅ ADD to existing payment instead of overwrite
@@ -115,7 +136,21 @@ const updateSalePayment = async (req, res) => {
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
       .populate("customer", "name email phone address")
-      .populate("items.product", "name invoiceNumber costPrice salePrice retailPrice batchNumber expirationDate");
+      .populate({
+        path: "items.product",
+        select:
+          "name description invoiceNumber costPrice retailPrice salePrice batchNumber expirationDate",
+      })
+      .lean();
+
+    // ✅ Override product salePrice with sale item price
+    sale.items = sale.items.map((item) => ({
+      ...item,
+      product: {
+        ...item.product,
+        salePrice: item.salePrice, // use per-sale price
+      },
+    }));
 
     res.json({ success: true, sale });
   } catch (error) {
@@ -123,6 +158,7 @@ const updateSalePayment = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // ✅ Delete Sale (restore stock for each item)
 const deleteSale = async (req, res) => {

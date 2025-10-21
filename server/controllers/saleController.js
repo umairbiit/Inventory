@@ -4,7 +4,7 @@ const Product = require("../models/product").default;
 // ✅ Create Sale (multi-item + partial payment)
 const createSale = async (req, res) => {
   try {
-    const { items, customer, initialPayment } = req.body;
+    const { items, customer, initialPayment, invoiceNumber, saleDate } = req.body;
 
     // --- Basic validations ---
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -22,7 +22,7 @@ const createSale = async (req, res) => {
     // --- Validate stock for each product ---
     for (const item of items) {
       const prod = await Product.findById(item.product);
-      if(prod){
+      if (prod) {
         prod.salePrice = item.salePrice;
       }
       if (!prod) {
@@ -54,28 +54,29 @@ const createSale = async (req, res) => {
         quantity: it.quantity,
         salePrice: it.salePrice,
       })),
-      invoiceNumber: req.body.invoiceNumber, // ✅ accept from frontend
+      invoiceNumber: invoiceNumber, // ✅ accept from frontend
       initialPayment: initialPayment || 0,
       paymentReceived: initialPayment || 0,
+      saleDate: saleDate || new Date(),
       user: req.user._id,
     });
 
     // ✅ Re-fetch populated sale to return full customer/product info
     sale = await Sale.findById(sale._id)
-  .populate("customer", "name email phone address")
-  .populate({
-    path: "items.product",
-    select: "name description invoiceNumber costPrice retailPrice batchNumber expirationDate",
-  })
-  .lean();
+      .populate("customer", "name email phone address")
+      .populate({
+        path: "items.product",
+        select: "name description invoiceNumber costPrice retailPrice batchNumber expirationDate",
+      })
+      .lean();
 
-sale.items = sale.items.map((item) => ({
-  ...item,
-  product: {
-    ...item.product,
-    salePrice: item.salePrice, // ✅ override with per-sale price
-  },
-}));
+    sale.items = sale.items.map((item) => ({
+      ...item,
+      product: {
+        ...item.product,
+        salePrice: item.salePrice, // ✅ override with per-sale price
+      },
+    }));
 
 
     res.status(201).json({ success: true, sale });

@@ -15,6 +15,7 @@ import {
   Col,
   Modal,
   Input,
+  DatePicker,
 } from "antd";
 import { PlusOutlined, DeleteOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -92,6 +93,7 @@ const Sales = () => {
       customer: undefined,
       items: [{ product: undefined, quantity: 1, salePrice: 0, discount: 0 }],
       initialPayment: 0,
+      saleDate: dayjs(),
     });
     setDrawerVisible(true);
   };
@@ -144,6 +146,7 @@ const Sales = () => {
         items: values.items,
         invoiceNumber: values.invoiceNumber,
         initialPayment: values.initialPayment || 0,
+        saleDate: values.saleDate ? values.saleDate.toDate() : new Date(),
       });
 
       // 👇 Assuming your backend returns created sale
@@ -228,8 +231,8 @@ const Sales = () => {
     },
     {
       title: "Date",
-      dataIndex: "date",
-      key: "date",
+      dataIndex: "saleDate",
+      key: "saleDate",
       render: (text) => (text ? dayjs(text).format("YYYY-MM-DD") : "-"),
     },
     {
@@ -503,6 +506,14 @@ const Sales = () => {
               style={{ width: "100%" }}
               placeholder="Enter amount paid now"
             />
+          </Form.Item>
+
+          <Form.Item
+            name="saleDate"
+            label="Sale Date"
+            rules={[{ required: true, message: "Please select sale date" }]}
+          >
+            <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
           <Text strong style={{ fontSize: 16, display: "block" }}>

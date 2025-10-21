@@ -54,7 +54,7 @@ const SaleSchema = new Schema(
       default: "unpaid",
     },
 
-    date: {
+    saleDate: {
       type: Date,
       default: Date.now,
     },

@@ -68,12 +68,6 @@ const Login = () => {
               <Input.Password placeholder="Enter password" />
             </Form.Item>
 
-            <div className="flex justify-end items-center mb-4 text-sm ">
-              <Link to="/forgot-password" className="hover:underline">
-                Forgot Password?
-              </Link>
-            </div>
-
             <Form.Item>
               <Button
                 type="primary"
@@ -84,14 +78,6 @@ const Login = () => {
                 Login
               </Button>
             </Form.Item>
-
-            {/* Optional: Add a link to the registration page */}
-            <div className="text-center text-sm">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-blue-500 hover:underline">
-                Register here
-              </Link>
-            </div>
           </Form>
         </div>
       </div>

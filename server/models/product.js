@@ -47,6 +47,10 @@ const productSchema = new mongoose.Schema(
       },
       default: null,
     },
+    datePurchased: {
+      type: Date,
+      default: null,
+    },
     batchNumber: {
       type: String,
       trim: true,

@@ -52,6 +52,9 @@ const Products = () => {
         expirationDate: product.expirationDate
           ? dayjs(product.expirationDate)
           : null,
+        datePurchased: product.datePurchased
+          ? dayjs(product.datePurchased)
+          : null,
       });
     } else {
       form.resetFields();
@@ -66,11 +69,14 @@ const Products = () => {
 
   const handleSubmit = async (values) => {
     try {
-      // Convert expirationDate to plain Date object
+      // Convert dates to plain Date object
       const payload = {
         ...values,
         expirationDate: values.expirationDate
           ? values.expirationDate.toDate()
+          : null,
+        datePurchased: values.datePurchased
+          ? values.datePurchased.toDate()
           : null,
       };
 
@@ -218,6 +224,14 @@ const Products = () => {
             rules={[{ required: true, message: "Please enter batch number" }]}
           >
             <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="datePurchased"
+            label="Date Purchased"
+            rules={[{ required: true, message: "Please select purchase date" }]}
+          >
+            <DatePicker style={{ width: "100%" }} />
           </Form.Item>
 
           <Form.Item name="expirationDate" label="Expiration Date">

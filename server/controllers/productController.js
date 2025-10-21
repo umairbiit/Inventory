@@ -3,7 +3,7 @@ import Product from "../models/product.js";
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, batchNumber } = req.body;
+    const { name, description, costPrice, salePrice, retailPrice, stock, category, datePurchased, expirationDate, batchNumber } = req.body;
 
     if (!name || costPrice == null || salePrice == null) {
       return res
@@ -20,6 +20,7 @@ export const createProduct = async (req, res) => {
       stock,
       category,
       expirationDate,
+      datePurchased,
       batchNumber,
     });
 
@@ -64,12 +65,13 @@ export const updateProduct = async (req, res) => {
       stock,
       category,
       expirationDate,
+      datePurchased,
       batchNumber
     } = req.body;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, batchNumber },
+      { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, datePurchased, batchNumber },
       { new: true, runValidators: true }
     );
 

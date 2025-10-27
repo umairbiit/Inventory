@@ -26,6 +26,19 @@ export const getSales = async () => {
   }
 };
 
+export const updateSaleService = async (saleId, saleData) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/api/sales/${saleId}`,
+      saleData,
+      { withCredentials: true }
+    );
+    return response;
+  } catch (error) {
+    return error.response;
+  }
+};
+
 // Delete a sale
 export const deleteSale = async (saleId) => {
   try {

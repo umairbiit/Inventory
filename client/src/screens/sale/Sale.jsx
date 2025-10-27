@@ -17,7 +17,9 @@ import {
   Input,
   DatePicker,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, DollarCircleOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import { generateReceipt } from "../../utils/generateReceipt";
 import {
@@ -25,6 +27,7 @@ import {
   createSale as createSaleService,
   deleteSale as deleteSaleService,
   updateSalePayment as updateSalePaymentService,
+  updateSaleService,
 } from "../../services/saleServices";
 import { getProducts as fetchProductsService } from "../../services/productServices";
 import { getCustomers as fetchCustomersService } from "../../services/customerService";
@@ -41,6 +44,8 @@ const Sales = () => {
   const [newPayment, setNewPayment] = useState(0);
   const [loading, setLoading] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form] = Form.useForm();
 
   // 👇 Watch fields for live calculation
@@ -89,12 +94,39 @@ const Sales = () => {
 
   const openDrawer = () => {
     form.resetFields();
+    setIsEditing(false);
+    setEditingId(null);
     form.setFieldsValue({
       customer: undefined,
       items: [{ product: undefined, quantity: 1, salePrice: 0, discount: 0 }],
       initialPayment: 0,
       saleDate: dayjs(),
     });
+    setDrawerVisible(true);
+  };
+
+  const handleEditSale = (record) => {
+    setIsEditing(true);
+    setEditingId(record._id);
+
+    const formattedItems = record.items.map((item) => ({
+      product: item.product?._id,
+      quantity: item.quantity,
+      salePrice: item.salePrice,
+      retailPrice: item.retailPrice,
+      discount: item.discount,
+      batchNumber: item.batchNumber,
+      expiryDate: item.expiryDate ? dayjs(item.expiryDate) : null,
+    }));
+
+    form.setFieldsValue({
+      invoiceNumber: record.invoiceNumber,
+      customer: record.customer?._id,
+      items: formattedItems,
+      initialPayment: record.paymentReceived,
+      saleDate: record.saleDate ? dayjs(record.saleDate) : dayjs(),
+    });
+
     setDrawerVisible(true);
   };
 
@@ -141,25 +173,48 @@ const Sales = () => {
 
   const handleSubmit = async (values) => {
     try {
-      const res = await createSaleService({
-        customer: values.customer,
-        items: values.items,
-        invoiceNumber: values.invoiceNumber,
-        initialPayment: values.initialPayment || 0,
-        saleDate: values.saleDate ? values.saleDate.toDate() : new Date(),
-      });
+      if (isEditing && editingId) {
+        console.log("HERE");
 
-      // 👇 Assuming your backend returns created sale
-      if (res?.data?.success && res?.data?.sale) {
-        message.success("Sale created successfully");
-        generateReceipt(res.data.sale); // <-- generate PDF
-        closeDrawer();
-        fetchSales();
+        // 🟢 UPDATE EXISTING SALE
+        const res = await updateSaleService(editingId, {
+          customer: values.customer,
+          items: values.items,
+          invoiceNumber: values.invoiceNumber,
+          initialPayment: values.initialPayment || 0,
+          saleDate: values.saleDate ? values.saleDate.toDate() : new Date(),
+        });
+
+
+        if (res?.data?.success && res?.data?.sale) {
+          message.success("Sale updated successfully");
+          generateReceipt(res.data.sale);
+          closeDrawer();
+          fetchSales();
+        } else {
+          message.error(res?.data?.message || "Failed to update sale");
+        }
       } else {
-        message.error(res?.data?.message || "Failed to create sale");
+        // 🟢 CREATE NEW SALE
+        const res = await createSaleService({
+          customer: values.customer,
+          items: values.items,
+          invoiceNumber: values.invoiceNumber,
+          initialPayment: values.initialPayment || 0,
+          saleDate: values.saleDate ? values.saleDate.toDate() : new Date(),
+        });
+
+        if (res?.data?.success && res?.data?.sale) {
+          message.success("Sale created successfully");
+          generateReceipt(res.data.sale);
+          closeDrawer();
+          fetchSales();
+        } else {
+          message.error(res?.data?.message || "Failed to create sale");
+        }
       }
     } catch (error) {
-      message.error(error.response?.data?.message || "Failed to create sale");
+      message.error(error.response?.data?.message || "Failed to save sale");
     }
   };
 
@@ -222,7 +277,11 @@ const Sales = () => {
         <span
           style={{
             color:
-              status === "paid" ? "green" : status === "partial" ? "orange" : "red",
+              status === "paid"
+                ? "green"
+                : status === "partial"
+                  ? "orange"
+                  : "red",
           }}
         >
           {status.toUpperCase()}
@@ -245,25 +304,23 @@ const Sales = () => {
             icon={<DollarCircleOutlined style={{ color: "#52c41a" }} />}
             onClick={() => handleUpdatePaymentClick(record)}
             disabled={record.paymentStatus === "paid"}
-          >
-          </Button>
-
+          />
+          <Button
+            type="link"
+            icon={<EditOutlined style={{ color: "#1677ff" }} />}
+            onClick={() => handleEditSale(record)}
+          />
           <Popconfirm
             title="Delete this sale?"
             onConfirm={() => handleDelete(record._id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-            >
-            </Button>
+            <Button danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
     },
-
   ];
 
   return (
@@ -313,7 +370,7 @@ const Sales = () => {
 
 
       <Drawer
-        title="Record New Sale"
+        title={isEditing ? "Edit Sale" : "Record New Sale"}
         width={800}
         onClose={closeDrawer}
         open={drawerVisible}

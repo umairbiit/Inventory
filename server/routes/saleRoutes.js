@@ -4,6 +4,7 @@ const protect = require("../middlewares/authMiddleware");
 const {
   createSale,
   getSales,
+  updateSale,
   deleteSale,
   updateSalePayment
 } = require("../controllers/saleController");
@@ -13,6 +14,7 @@ router.use(protect);
 
 router.post("/", createSale);
 router.get("/", getSales);
+router.put("/:id", updateSale);
 router.delete("/:id", deleteSale);
 router.patch("/:id/payment", updateSalePayment);
 

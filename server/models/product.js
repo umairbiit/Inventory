@@ -53,9 +53,6 @@ const productSchema = new mongoose.Schema(
     },
     batchNumber: {
       type: String,
-      trim: true,
-      unique: true, // enforce uniqueness at database level
-      sparse: true, // allows multiple null/empty values
       default: "",
     },
   },

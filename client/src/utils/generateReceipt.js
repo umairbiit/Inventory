@@ -9,18 +9,17 @@ export const generateReceipt = (sale) => {
   // ===== HEADER =====
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("Winlet Pharmaceuticals (PVT) LTD", pageWidth / 2, 12, { align: "center" });
+  doc.text("Winlet Pharmaceuticals (PVT) LTD", pageWidth / 2, 25, { align: "center" });
 
   doc.setFont("helvetica", "italic");
   doc.setFontSize(13);
-  doc.text("Sales Receipt", pageWidth / 2, 18, { align: "center" });
+  doc.text("Sales Receipt", pageWidth / 2, 32, { align: "center" });
 
   doc.setDrawColor(160);
-  //doc.line(10, 26, pageWidth - 10, 26);
-  doc.line(10, 20, pageWidth - 10, 20);
+  doc.line(10, 34, pageWidth - 10, 34);
 
   // ===== CUSTOMER DETAILS BOX =====
-  const boxTop = 28;
+  const boxTop = 40; // was 28
   const boxHeight = 26;
 
   doc.setFillColor(245, 245, 245);
@@ -91,7 +90,7 @@ export const generateReceipt = (sale) => {
 
     return [
       srNo++,
-      product.name + " - " + (product.description || ""),
+      (product.name || "") + (product.description ? "\n" + product.description : ""),
       product.batchNumber || "-",
       product.expirationDate
         ? new Date(product.expirationDate).toLocaleDateString()

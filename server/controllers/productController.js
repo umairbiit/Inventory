@@ -3,15 +3,28 @@ import Product from "../models/product.js";
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, costPrice, salePrice, retailPrice, stock, category, datePurchased, expirationDate, batchNumber } = req.body;
+    const {
+      name,
+      description,
+      costPrice,
+      salePrice,
+      retailPrice,
+      stock,
+      category,
+      datePurchased,
+      expirationDate,
+      batchNumber,
+    } = req.body;
 
-    if (!name || costPrice == null || salePrice == null) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Name, costPrice, salePrice and retailPrice are required" });
+    // Manual required field check
+    if (!name || costPrice == null || salePrice == null || retailPrice == null) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, costPrice, salePrice and retailPrice are required",
+      });
     }
 
-    const product = await Product.create({
+    const product = new Product({
       name,
       description,
       costPrice,
@@ -24,11 +37,29 @@ export const createProduct = async (req, res) => {
       batchNumber,
     });
 
-    res.status(201).json({ success: true, product });
+    const savedProduct = await product.save(); // ensures validation + DB write
+
+    // Extra safety check (should always pass if save succeeded)
+    if (!savedProduct || !savedProduct._id) {
+      return res.status(500).json({
+        success: false,
+        message: "Product was not saved. Please try again.",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      product: savedProduct,
+    });
+
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Failed to create product",
+    });
   }
 };
+
 
 // Get All Products
 export const getProducts = async (req, res) => {

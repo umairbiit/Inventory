@@ -155,25 +155,31 @@ const login = asyncHandler(async (req, res) => {
 // and to verify the JWT token
 const loginStatus = asyncHandler(async (req, res) => {
   const token = req.cookies.token;
+
   if (!token) {
     return res.json(false);
   }
-  const verified = jwt.verify(token, process.env.JWT_SECRET);
-  if (verified) {
+
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(verified.id).select("-password");
+
     if (user) {
-      res.json({
+      return res.json({
         verified: true,
         id: verified.id,
         status: user.status,
-        user: user,
-        token: token,
+        user,
+        token,
       });
     }
-  }
 
-  return res.json(false);
+    return res.json(false);
+  } catch (err) {
+    return res.json(false);
+  }
 });
+
 
 // Get User Details Controller
 const getUserDetails = asyncHandler(async (req, res) => {

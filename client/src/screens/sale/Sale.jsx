@@ -16,6 +16,7 @@ import {
   Modal,
   Input,
   DatePicker,
+  Tabs,
 } from "antd";
 import {
   PlusOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined
@@ -42,6 +43,8 @@ const Sales = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [newPayment, setNewPayment] = useState(0);
+  const [paymentDate, setPaymentDate] = useState(dayjs());
+  const [paymentNote, setPaymentNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -132,7 +135,11 @@ const Sales = () => {
 
   const handleUpdatePaymentClick = (record) => {
     setSelectedSale(record);
-    setNewPayment(record.balance);
+    // Default to remaining balance
+    const remaining = record.totalAmount - record.paymentReceived;
+    setNewPayment(Math.max(remaining, 0));
+    setPaymentDate(dayjs());
+    setPaymentNote("");
     setIsModalOpen(true);
   };
 
@@ -143,7 +150,13 @@ const Sales = () => {
       return;
     }
 
-    const res = await updateSalePaymentService(selectedSale._id, newPayment);
+    const payload = {
+      amount: newPayment,
+      date: paymentDate ? paymentDate.toDate() : new Date(),
+      note: paymentNote,
+    };
+
+    const res = await updateSalePaymentService(selectedSale._id, payload);
     if (res?.data?.success && res?.data?.sale) {
       message.success("Payment updated");
       generateReceipt(res.data.sale); // <-- generate PDF
@@ -342,31 +355,85 @@ const Sales = () => {
       />
 
       <Modal
-        title="Update Payment"
+        title="Payment Details"
         open={isModalOpen}
         onOk={handleUpdatePaymentOk}
         onCancel={() => setIsModalOpen(false)}
-        okText="Update"
+        okText="Add Payment"
+        width={700}
       >
         {selectedSale && (
-          <div>
-            <p>
-              Current Paid: {selectedSale.paymentReceived} /{" "}
-              {selectedSale.totalAmount} PKR
-            </p>
-            <p>
-              Remaining: {selectedSale.totalAmount - selectedSale.paymentReceived} PKR
-            </p>
+          <Tabs defaultActiveKey="1">
+            <Tabs.TabPane tab="Make Payment" key="1">
+              <div style={{ marginTop: 10 }}>
+                <p>
+                  <strong>Total:</strong> {selectedSale.totalAmount} PKR |{" "}
+                  <strong>Paid:</strong> {selectedSale.paymentReceived} PKR
+                </p>
+                <p>
+                  <strong>Remaining:</strong>{" "}
+                  <span style={{ color: "red", fontWeight: "bold" }}>
+                    {selectedSale.totalAmount - selectedSale.paymentReceived} PKR
+                  </span>
+                </p>
 
-            <InputNumber
-              min={0}
-              // ✅ default to remaining balance or 0 if fully paid
-              value={newPayment ?? Math.max(selectedSale.totalAmount - selectedSale.paymentReceived, 0)}
-              style={{ width: "100%" }}
-              onChange={setNewPayment} // ✅ This holds only the *installment amount*
-              placeholder="Enter additional payment"
-            />
-          </div>
+                <div style={{ marginBottom: 10 }}>
+                  <label>Amount:</label>
+                  <InputNumber
+                    min={0}
+                    value={newPayment}
+                    style={{ width: "100%" }}
+                    onChange={setNewPayment}
+                    placeholder="Enter amount"
+                  />
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <label>Date:</label>
+                  <DatePicker
+                    value={paymentDate}
+                    onChange={setPaymentDate}
+                    style={{ width: "100%" }}
+                    allowClear={false}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 10 }}>
+                  <label>Note:</label>
+                  <Input
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    placeholder="Optional note (e.g. Bank Transfer, Cheque)"
+                  />
+                </div>
+              </div>
+            </Tabs.TabPane>
+
+            <Tabs.TabPane tab="Payment History" key="2">
+              <Table
+                dataSource={selectedSale.payments || []}
+                rowKey={(record, index) => index}
+                pagination={false}
+                size="small"
+                columns={[
+                  {
+                    title: "Date",
+                    dataIndex: "date",
+                    render: (d) => (d ? dayjs(d).format("YYYY-MM-DD") : "-"),
+                  },
+                  {
+                    title: "Amount",
+                    dataIndex: "amount",
+                    render: (a) => `${a} PKR`,
+                  },
+                  {
+                    title: "Note",
+                    dataIndex: "note",
+                  },
+                ]}
+              />
+            </Tabs.TabPane>
+          </Tabs>
         )}
       </Modal>
 

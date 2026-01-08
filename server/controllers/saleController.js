@@ -41,7 +41,7 @@ const createSale = async (req, res) => {
       await prod.save();
     }
 
-    let sale = await Sale.create({
+    let salePayload = {
       customer,
       items: items.map((it) => ({
         product: it.product,
@@ -53,7 +53,18 @@ const createSale = async (req, res) => {
       paymentReceived: initialPayment || 0,
       saleDate: saleDate || new Date(),
       user: req.user._id,
-    });
+      payments: [],
+    };
+
+    if (initialPayment > 0) {
+      salePayload.payments.push({
+        amount: initialPayment,
+        date: saleDate || new Date(),
+        note: "Initial Payment",
+      });
+    }
+
+    let sale = await Sale.create(salePayload);
 
     sale = await Sale.findById(sale._id)
       .populate("customer", "name email phone address")
@@ -96,7 +107,7 @@ const getSales = async (req, res) => {
 const updateSalePayment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount } = req.body;
+    const { amount, date, note } = req.body;
 
     if (amount == null || isNaN(amount)) {
       return res
@@ -111,7 +122,24 @@ const updateSalePayment = async (req, res) => {
         .json({ success: false, message: "Sale not found" });
     }
 
-    sale.paymentReceived += Number(amount);
+    // Migration: If existing payments but no history, create a legacy record
+    if (sale.payments.length === 0 && sale.paymentReceived > 0) {
+      sale.payments.push({
+        amount: sale.paymentReceived,
+        date: sale.createdAt || new Date(),
+        note: "Previous Balance (Legacy)",
+      });
+    }
+
+    // Add new payment
+    sale.payments.push({
+      amount: Number(amount),
+      date: date || new Date(),
+      note: note || "Manual Payment",
+    });
+
+    // Recalculate total received from history
+    sale.paymentReceived = sale.payments.reduce((sum, p) => sum + p.amount, 0);
 
     if (sale.paymentReceived >= sale.totalAmount) {
       sale.paymentStatus = "paid";

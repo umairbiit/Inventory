@@ -47,6 +47,15 @@ const SaleSchema = new Schema(
       min: 0,
     },
 
+    // ✅ Payment History (New)
+    payments: [
+      {
+        amount: { type: Number, required: true },
+        date: { type: Date, default: Date.now },
+        note: { type: String, default: "" },
+      },
+    ],
+
     // ✅ Payment Status
     paymentStatus: {
       type: String,

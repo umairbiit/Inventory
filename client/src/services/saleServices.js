@@ -52,11 +52,12 @@ export const deleteSale = async (saleId) => {
 };
 
 // ✅ NEW — Update payment for a sale
-export const updateSalePayment = async (saleId, amount) => {
+// ✅ NEW — Update payment for a sale
+export const updateSalePayment = async (saleId, paymentData) => {
   try {
     const response = await axios.patch(
       `${API_URL}/api/sales/${saleId}/payment`,
-      { amount },
+      paymentData, // { amount, date, note }
       { withCredentials: true }
     );
     return response;

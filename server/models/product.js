@@ -37,14 +37,6 @@ const productSchema = new mongoose.Schema(
     },
     expirationDate: {
       type: Date,
-      validate: {
-        validator: function (value) {
-          // Allow null/undefined (optional field)
-          if (!value) return true;
-          return value > new Date();
-        },
-        message: "Expiration date must be in the future",
-      },
       default: null,
     },
     datePurchased: {
@@ -54,6 +46,10 @@ const productSchema = new mongoose.Schema(
     batchNumber: {
       type: String,
       default: "",
+    },
+    imported: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -14,6 +14,7 @@ export const createProduct = async (req, res) => {
       datePurchased,
       expirationDate,
       batchNumber,
+      imported,
     } = req.body;
 
     // Manual required field check
@@ -35,6 +36,7 @@ export const createProduct = async (req, res) => {
       expirationDate,
       datePurchased,
       batchNumber,
+      imported,
     });
 
     const savedProduct = await product.save(); // ensures validation + DB write
@@ -53,6 +55,14 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("❌ Product creation error:", {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      validationErrors: error.errors,
+      stack: error.stack
+    });
+
     return res.status(400).json({
       success: false,
       message: error.message || "Failed to create product",
@@ -64,12 +74,17 @@ export const createProduct = async (req, res) => {
 // Get All Products
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    // Sort alphabetically (A → Z), case-insensitive
+    const products = await Product.find()
+      .collation({ locale: "en", strength: 2 })
+      .sort({ name: 1 });
+
     res.status(200).json({ success: true, products });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Get Single Product
 export const getProductById = async (req, res) => {
@@ -97,12 +112,13 @@ export const updateProduct = async (req, res) => {
       category,
       expirationDate,
       datePurchased,
-      batchNumber
+      batchNumber,
+      imported,
     } = req.body;
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, datePurchased, batchNumber },
+      { name, description, costPrice, salePrice, retailPrice, stock, category, expirationDate, datePurchased, batchNumber, imported },
       { new: true, runValidators: true }
     );
 

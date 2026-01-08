@@ -174,7 +174,6 @@ const Sales = () => {
   const handleSubmit = async (values) => {
     try {
       if (isEditing && editingId) {
-        console.log("HERE");
 
         // 🟢 UPDATE EXISTING SALE
         const res = await updateSaleService(editingId, {
@@ -191,6 +190,7 @@ const Sales = () => {
           generateReceipt(res.data.sale);
           closeDrawer();
           fetchSales();
+          fetchProducts(); // ✅ Refresh products to show updated stock
         } else {
           message.error(res?.data?.message || "Failed to update sale");
         }
@@ -209,6 +209,7 @@ const Sales = () => {
           generateReceipt(res.data.sale);
           closeDrawer();
           fetchSales();
+          fetchProducts(); // ✅ Refresh products to show updated stock
         } else {
           message.error(res?.data?.message || "Failed to create sale");
         }
@@ -223,6 +224,7 @@ const Sales = () => {
       await deleteSaleService(id);
       message.success("Sale deleted and stock restored");
       fetchSales();
+      fetchProducts(); // ✅ Refresh products to show restored stock
     } catch (error) {
       message.error("Failed to delete sale");
     }

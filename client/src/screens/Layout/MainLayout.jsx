@@ -11,12 +11,12 @@ import {
   MoneyCollectOutlined,
 } from "@ant-design/icons";
 import { Button, Layout, Menu, theme, Breadcrumb, Typography, Avatar } from "antd";
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 
 import Products from "../products/Products";
 import Customer from "../customer/Customer";
-import Expenses from "../expense/Expense";
+import Expenses from "../expense/expense";
 import Sales from "../sale/Sale";
 import Report from "../report/Report";
 
@@ -30,6 +30,12 @@ const MainLayout = () => {
   } = theme.useToken();
   const { user, logoutUser } = useContext(UserContext);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate("/login", { replace: true });
+  };
 
   // Determine selected menu key based on current route
   const selectedKey = (() => {
@@ -127,7 +133,7 @@ const MainLayout = () => {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Avatar icon={<UserOutlined />} />
             <Text strong>{user?.name || "User"}</Text>
-            <Button type="primary" danger icon={<LogoutOutlined />} onClick={logoutUser}>
+            <Button type="primary" danger icon={<LogoutOutlined />} onClick={handleLogout}>
               Logout
             </Button>
           </div>

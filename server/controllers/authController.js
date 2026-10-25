@@ -133,8 +133,8 @@ const login = asyncHandler(async (req, res) => {
       user.type === "user"
         ? new Date(Date.now() + 1000 * 86400) // 24 hours
         : new Date(Date.now() + 1000 * 7200), // 2 hours
-    sameSite: "none",
-    secure: true,
+    sameSite: process.env.COOKIE_SECURE === "false" ? "lax" : "none",
+    secure: process.env.COOKIE_SECURE !== "false",
   });
 
   // Return user data without password
@@ -309,8 +309,8 @@ const logOut = asyncHandler(async (req, res) => {
     path: "/",
     httpOnly: true,
     expires: new Date(0),
-    sameSite: "none",
-    secure: true,
+    sameSite: process.env.COOKIE_SECURE === "false" ? "lax" : "none",
+    secure: process.env.COOKIE_SECURE !== "false",
   });
   return res.status(200).json({ message: "Successfully Logged Out" });
 });

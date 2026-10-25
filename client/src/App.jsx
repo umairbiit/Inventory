@@ -1,7 +1,7 @@
 import "./App.css";
 import axios from "axios";
 import { useContext, useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { UserContext } from "./context/userContext";
 import Login from "./screens/auth/Login";
 import "antd/dist/reset.css";
@@ -9,16 +9,17 @@ import Register from "./screens/auth/Register";
 import VerifyEmail from "./screens/auth/VerifyEmail";
 import ForgotPassword from "./screens/auth/ForgotPassword";
 import ResetPassword from "./screens/auth/ResetPassword";
-import Layout from "./screens/layout/MainLayout";
+import Layout from "./screens/Layout/MainLayout";
 
 axios.defaults.withCredentials = true;
 
 function App() {
   const { user, logoutUser } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const handleUnauthorizedResponse = () => {
     logoutUser();
-    navigate("/");
+    navigate("/login", { replace: true });
   };
 
   useEffect(() => {
@@ -51,6 +52,7 @@ function App() {
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       )}
     </div>

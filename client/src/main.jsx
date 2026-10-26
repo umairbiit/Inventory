@@ -10,6 +10,9 @@ import { UserProvider } from "./context/userContext";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ConfigProvider
+      // Click "wave" animation disabled: when a drawer closes right after a
+      // submit click the wave element can get stuck inside the reused button.
+      wave={{ disabled: true }}
       theme={{
         token: {
           colorPrimary: "#fdbc0a", // your orange color

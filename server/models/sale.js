@@ -63,9 +63,18 @@ const SaleSchema = new Schema(
       default: "unpaid",
     },
 
+    // No schema default here on purpose: a default is also applied when an
+    // existing document that lacks the field is loaded, which made legacy
+    // sales (dated only by `date`) look like they were made "now". New sales
+    // get saleDate in the pre("validate") hook below instead.
     saleDate: {
       type: Date,
-      default: Date.now,
+    },
+
+    // Legacy field: older sales were dated by `date` only. Kept read-only so
+    // those documents still resolve to their real date.
+    date: {
+      type: Date,
     },
 
     user: {
@@ -81,6 +90,10 @@ const SaleSchema = new Schema(
   }
 );
 
+// Indexes used by the sales list, reports and dashboard aggregations
+SaleSchema.index({ user: 1, saleDate: -1 });
+SaleSchema.index({ user: 1, paymentStatus: 1 });
+
 // 🔹 Virtual totalAmount
 SaleSchema.virtual("totalAmount").get(function () {
   return (this.items || []).reduce(
@@ -94,6 +107,24 @@ SaleSchema.virtual("balance").get(function () {
   // paymentReceived should at least include initialPayment
   const received = Math.max(this.paymentReceived || 0, 0);
   return Math.max(this.totalAmount - received, 0);
+});
+
+// 🔹 Effective sale date for any document: saleDate ?? date ?? createdAt
+SaleSchema.statics.effectiveDate = (s) =>
+  (s && (s.saleDate || s.date || s.createdAt)) || null;
+
+// 🔹 Loaded legacy documents: resolve saleDate from date/createdAt (never "now")
+SaleSchema.post("init", function () {
+  if (!this.saleDate) {
+    const d = this.date || this.createdAt;
+    if (d) this.saleDate = d;
+  }
+});
+
+// 🔹 New documents: saleDate defaults to the creation time
+SaleSchema.pre("validate", function (next) {
+  if (!this.saleDate) this.saleDate = this.date || (this.isNew ? new Date() : this.createdAt);
+  next();
 });
 
 // 🔹 Before save: automatically set paymentReceived if not set

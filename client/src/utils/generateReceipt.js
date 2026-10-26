@@ -60,7 +60,7 @@ export const generateReceipt = (sale) => {
 
   doc.text(`Date:`, rightX, infoYStart + 13);
   doc.text(
-    `${new Date(sale.date || Date.now()).toLocaleDateString()}`,
+    `${new Date(sale.saleDate || sale.date || sale.createdAt || Date.now()).toLocaleDateString(undefined, { timeZone: "Asia/Karachi" })}`,
     rightX + 33,
     infoYStart + 13
   );

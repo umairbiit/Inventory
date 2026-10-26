@@ -18,6 +18,15 @@ const createSale = async (req, res) => {
         .json({ success: false, message: "Customer is required." });
     }
 
+    // Check the invoice number before touching stock (a duplicate used to fail
+    // only at Sale.create, after stock had already been deducted).
+    if (invoiceNumber && (await Sale.exists({ invoiceNumber }))) {
+      return res.status(400).json({
+        success: false,
+        message: `Invoice number ${invoiceNumber} already exists`,
+      });
+    }
+
     for (const item of items) {
       const prod = await Product.findById(item.product);
       if (!prod) {
@@ -95,7 +104,12 @@ const getSales = async (req, res) => {
     const sales = await Sale.find({ user: req.user._id })
       .populate("customer", "name email phone")
       .populate("items.product", "name costPrice salePrice")
-      .sort({ date: -1 });
+      .sort({ saleDate: -1, createdAt: -1 });
+
+    // Legacy sales may be dated only by `date` (the model resolves saleDate on
+    // load), so order by the effective date after loading.
+    const eff = (s) => new Date(s.saleDate || s.date || s.createdAt || 0).getTime();
+    sales.sort((a, b) => eff(b) - eff(a) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
     res.status(200).json({ success: true, sales });
   } catch (error) {
